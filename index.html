@@ -1,29 +1,115 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Reminder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 8px 0;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 16px;
+            margin: 8px 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .item {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-top: 8px;
+            border-radius: 6px;
+        }
+    </style>
 </head>
 <body>
-    <h2>AI Reminder</h2>
+<h1>AI Reminder</h1>
 
-    <input id="task" placeholder="task">
-    <input id="time" placeholder="2026-03-13 20:00">
+<input id="task" type="text" placeholder="Enter your task">
+<input id="time" type="text" placeholder="YYYY-MM-DD HH:MM">
 
-    <button onclick="add()">Add</button>
+<div>
+    <button onclick="addReminder()">Add Reminder</button>
+    <button onclick="loadReminders()">Show Reminders</button>
+</div>
 
-    <script>
-    async function add() {
-        let task = document.getElementById("task").value
-        let time = document.getElementById("time").value
+<p id="message"></p>
+<div id="result"></div>
 
-        await fetch(
-            `http://127.0.0.1:8000/add?task=${encodeURIComponent(task)}&time=${encodeURIComponent(time)}`,
-            { method: "POST" }
-        )
+<script>
+    async function addReminder() {
+        const task = document.getElementById("task").value.trim();
+        const time = document.getElementById("time").value.trim();
+        const message = document.getElementById("message");
 
-        alert("Reminder added")
+        if (!task || !time) {
+            message.innerText = "Please enter both task and time.";
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `http://127.0.0.1:8000/add?task=${encodeURIComponent(task)}&time=${encodeURIComponent(time)}`,
+                {
+                    method: "POST"
+                }
+            );
+
+            if (!response.ok) {
+                message.innerText = "Failed to add reminder.";
+                return;
+            }
+
+            message.innerText = "Reminder added successfully.";
+            document.getElementById("task").value = "";
+            document.getElementById("time").value = "";
+        } catch (error) {
+            console.error(error);
+            message.innerText = "Request failed. Check backend or CORS settings.";
+        }
     }
-    </script>
+
+    async function loadReminders() {
+        const result = document.getElementById("result");
+        result.innerHTML = "";
+
+        const response = await fetch("http://127.0.0.1:8000/list");
+        const reminders = await response.json();
+
+        if (reminders.length === 0) {
+            result.innerHTML = "<p>No pending reminders.</p>";
+            return;
+        }
+
+        reminders.forEach(reminder => {
+            const div = document.createElement("div");
+            div.className = "item";
+            div.innerText = `Task: ${reminder[1]} | Time: ${reminder[2]}`;
+            result.appendChild(div);
+        });
+    }
+</script>
 </body>
 </html>
