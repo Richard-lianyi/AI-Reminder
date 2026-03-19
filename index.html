@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AI Reminder</title>
+</head>
+<body>
+    <h2>AI Reminder</h2>
+
+    <input id="task" placeholder="task">
+    <input id="time" placeholder="2026-03-13 20:00">
+
+    <button onclick="add()">Add</button>
+
+    <script>
+    async function add() {
+        let task = document.getElementById("task").value
+        let time = document.getElementById("time").value
+
+        await fetch(
+            `http://127.0.0.1:8000/add?task=${encodeURIComponent(task)}&time=${encodeURIComponent(time)}`,
+            { method: "POST" }
+        )
+
+        alert("Reminder added")
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+from fastapi import FastAPI
+import sqlite3
+from database import init_db
+
+app = FastAPI()
+
+init_db()
+
+@app.post("/add")
+def add_reminder(task: str, time: str):
+    conn = sqlite3.connect("reminders.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO reminders (task, time, done) VALUES (?, ?, 0)",
+        (task, time)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "added"}
+
+@app.get("/list")
+def list_reminders():
+    conn = sqlite3.connect("reminders.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM reminders WHERE done = 0")
+    rows = cursor.fetchall()
+
+    conn.close()
+
+    return rows
