@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 import sqlite3
 from database import init_db
 
@@ -41,3 +42,7 @@ def list_reminders():
     conn.close()
 
     return rows
+
+@app.get("/")
+def read_index():
+    return FileResponse("index.html")
