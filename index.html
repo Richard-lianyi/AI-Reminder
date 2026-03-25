@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Reminder</title>
+    <title>AI Reminder TEST DELETE</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,85 +31,136 @@
             cursor: pointer;
         }
 
+        #message {
+            margin-top: 15px;
+            min-height: 24px;
+            font-weight: bold;
+        }
+
         #result {
             margin-top: 20px;
             text-align: left;
         }
 
         .item {
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #ccc;
-            margin-top: 8px;
+            margin-top: 10px;
             border-radius: 6px;
+        }
+
+        .item button {
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-<h1>AI Reminder</h1>
+    <h1>AI Reminder</h1>
 
-<input id="task" type="text" placeholder="Enter your task">
-<input id="time" type="text" placeholder="YYYY-MM-DD HH:MM">
+    <input id="task" type="text" placeholder="Enter your task">
+    <input id="time" type="text" placeholder="YYYY-MM-DD HH:MM">
 
-<div>
-    <button onclick="addReminder()">Add Reminder</button>
-    <button onclick="loadReminders()">Show Reminders</button>
-</div>
+    <div>
+        <button onclick="addReminder()">Add Reminder</button>
+        <button onclick="loadReminders()">Show Reminders</button>
+    </div>
 
-<p id="message"></p>
-<div id="result"></div>
+    <p id="message"></p>
+    <div id="result"></div>
 
-<script>
-    async function addReminder() {
-        const task = document.getElementById("task").value.trim();
-        const time = document.getElementById("time").value.trim();
-        const message = document.getElementById("message");
+    <script>
+        async function addReminder() {
+            const task = document.getElementById("task").value.trim();
+            const time = document.getElementById("time").value.trim();
+            const message = document.getElementById("message");
 
-        if (!task || !time) {
-            message.innerText = "Please enter both task and time.";
-            return;
-        }
-
-        try {
-            const response = await fetch(
-                `http://127.0.0.1:8000/add?task=${encodeURIComponent(task)}&time=${encodeURIComponent(time)}`,
-                {
-                    method: "POST"
-                }
-            );
-
-            if (!response.ok) {
-                message.innerText = "Failed to add reminder.";
+            if (!task || !time) {
+                message.innerText = "Please enter both task and time.";
                 return;
             }
 
-            message.innerText = "Reminder added successfully.";
-            document.getElementById("task").value = "";
-            document.getElementById("time").value = "";
-        } catch (error) {
-            console.error(error);
-            message.innerText = "Request failed. Check backend or CORS settings.";
+            try {
+                const response = await fetch(
+                    `http://127.0.0.1:8000/add?task=${encodeURIComponent(task)}&time=${encodeURIComponent(time)}`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+                if (!response.ok) {
+                    message.innerText = "Failed to add reminder.";
+                    return;
+                }
+
+                message.innerText = "Reminder added successfully.";
+                document.getElementById("task").value = "";
+                document.getElementById("time").value = "";
+
+                await loadReminders();
+            } catch (error) {
+                console.error(error);
+                message.innerText = "Request failed. Check backend or CORS settings.";
+            }
         }
-    }
 
-    async function loadReminders() {
-        const result = document.getElementById("result");
-        result.innerHTML = "";
+        async function loadReminders() {
+            const result = document.getElementById("result");
+            const message = document.getElementById("message");
+            result.innerHTML = "";
 
-        const response = await fetch("http://127.0.0.1:8000/list");
-        const reminders = await response.json();
+            try {
+                const response = await fetch("http://127.0.0.1:8000/list");
 
-        if (reminders.length === 0) {
-            result.innerHTML = "<p>No pending reminders.</p>";
-            return;
+                if (!response.ok) {
+                    message.innerText = "Failed to load reminders.";
+                    return;
+                }
+
+                const reminders = await response.json();
+
+                if (reminders.length === 0) {
+                    result.innerHTML = "<p>No pending reminders.</p>";
+                    return;
+                }
+
+                reminders.forEach(reminder => {
+                    const div = document.createElement("div");
+                    div.className = "item";
+
+                    div.innerHTML = `
+                        <div><strong>Task:</strong> ${reminder[1]}</div>
+                        <div><strong>Time:</strong> ${reminder[2]}</div>
+                        <button onclick="deleteReminder(${reminder[0]})">Delete</button>
+                    `;
+
+                    result.appendChild(div);
+                });
+            } catch (error) {
+                console.error(error);
+                message.innerText = "Could not load reminders.";
+            }
         }
 
-        reminders.forEach(reminder => {
-            const div = document.createElement("div");
-            div.className = "item";
-            div.innerText = `Task: ${reminder[1]} | Time: ${reminder[2]}`;
-            result.appendChild(div);
-        });
-    }
-</script>
+        async function deleteReminder(id) {
+            const message = document.getElementById("message");
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/delete/${id}`, {
+                    method: "DELETE"
+                });
+
+                if (!response.ok) {
+                    message.innerText = "Failed to delete reminder.";
+                    return;
+                }
+
+                message.innerText = "Reminder deleted successfully.";
+                await loadReminders();
+            } catch (error) {
+                console.error(error);
+                message.innerText = "Request failed while deleting reminder.";
+            }
+        }
+    </script>
 </body>
 </html>

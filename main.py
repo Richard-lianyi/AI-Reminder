@@ -43,6 +43,18 @@ def list_reminders():
 
     return rows
 
+@app.delete("/delete/{reminder_id}")
+def delete_reminder(reminder_id: int):
+    conn = sqlite3.connect("reminders.db")
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM reminders WHERE id = ?", (reminder_id,))
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "deleted"}
+
 @app.get("/")
 def read_index():
     return FileResponse("index.html")
