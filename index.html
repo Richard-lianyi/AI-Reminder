@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Reminder TEST DELETE</title>
+    <title>AI Reminder</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 500px;
+            max-width: 600px;
             margin: 50px auto;
             padding: 20px;
             text-align: center;
@@ -15,6 +15,11 @@
 
         h1 {
             margin-bottom: 20px;
+        }
+
+        h2 {
+            margin-top: 30px;
+            text-align: left;
         }
 
         input {
@@ -37,7 +42,8 @@
             font-weight: bold;
         }
 
-        #result {
+        #result,
+        #completedResult {
             margin-top: 20px;
             text-align: left;
         }
@@ -63,10 +69,16 @@
     <div>
         <button onclick="addReminder()">Add Reminder</button>
         <button onclick="loadReminders()">Show Reminders</button>
+        <button onclick="loadCompleted()">Show Completed</button>
     </div>
 
     <p id="message"></p>
+
+    <h2>Pending Reminders</h2>
     <div id="result"></div>
+
+    <h2>Completed Reminders</h2>
+    <div id="completedResult"></div>
 
     <script>
         async function addReminder() {
@@ -97,6 +109,7 @@
                 document.getElementById("time").value = "";
 
                 await loadReminders();
+                await loadCompleted();
             } catch (error) {
                 console.error(error);
                 message.innerText = "Request failed. Check backend or CORS settings.";
@@ -141,6 +154,44 @@
             }
         }
 
+        async function loadCompleted() {
+            const completedResult = document.getElementById("completedResult");
+            const message = document.getElementById("message");
+            completedResult.innerHTML = "";
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/completed");
+
+                if (!response.ok) {
+                    message.innerText = "Failed to load completed reminders.";
+                    return;
+                }
+
+                const reminders = await response.json();
+
+                if (reminders.length === 0) {
+                    completedResult.innerHTML = "<p>No completed reminders.</p>";
+                    return;
+                }
+
+                reminders.forEach(reminder => {
+                    const div = document.createElement("div");
+                    div.className = "item";
+
+                    div.innerHTML = `
+                        <div><strong>Task:</strong> ${reminder[1]}</div>
+                        <div><strong>Time:</strong> ${reminder[2]}</div>
+                        <div><strong>Status:</strong> Completed</div>
+                    `;
+
+                    completedResult.appendChild(div);
+                });
+            } catch (error) {
+                console.error(error);
+                message.innerText = "Could not load completed reminders.";
+            }
+        }
+
         async function deleteReminder(id) {
             const message = document.getElementById("message");
 
@@ -156,6 +207,7 @@
 
                 message.innerText = "Reminder deleted successfully.";
                 await loadReminders();
+                await loadCompleted();
             } catch (error) {
                 console.error(error);
                 message.innerText = "Request failed while deleting reminder.";
