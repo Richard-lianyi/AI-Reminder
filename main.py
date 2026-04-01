@@ -43,6 +43,18 @@ def list_reminders():
 
     return rows
 
+@app.get("/completed")
+def completed_reminders():
+    conn = sqlite3.connect("reminders.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM reminders WHERE done = 1")
+    rows = cursor.fetchall()
+
+    conn.close()
+
+    return rows
+
 @app.delete("/delete/{reminder_id}")
 def delete_reminder(reminder_id: int):
     conn = sqlite3.connect("reminders.db")
