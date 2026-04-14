@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,11 +61,12 @@
         }
     </style>
 </head>
+
 <body>
     <h1>AI Reminder</h1>
 
     <input id="task" type="text" placeholder="Enter your task">
-    <input id="time" type="text" placeholder="YYYY-MM-DD HH:MM">
+    <input id="time" type="datetime-local">
 
     <div>
         <button onclick="addReminder()">Add Reminder</button>
@@ -83,10 +85,11 @@
     <script>
         async function addReminder() {
             const task = document.getElementById("task").value.trim();
-            const time = document.getElementById("time").value.trim();
+            const rawTime = document.getElementById("time").value;
+            const time = rawTime.replace("T", " ");
             const message = document.getElementById("message");
 
-            if (!task || !time) {
+            if (!task || !rawTime) {
                 message.innerText = "Please enter both task and time.";
                 return;
             }
@@ -143,6 +146,7 @@
                     div.innerHTML = `
                         <div><strong>Task:</strong> ${reminder[1]}</div>
                         <div><strong>Time:</strong> ${reminder[2]}</div>
+                        <button onclick="completeReminder(${reminder[0]})">Mark as Done</button>
                         <button onclick="deleteReminder(${reminder[0]})">Delete</button>
                     `;
 
@@ -192,6 +196,28 @@
             }
         }
 
+        async function completeReminder(id) {
+            const message = document.getElementById("message");
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/complete/${id}`, {
+                    method: "PUT"
+                });
+
+                if (!response.ok) {
+                    message.innerText = "Failed to mark reminder as completed.";
+                    return;
+                }
+
+                message.innerText = "Reminder marked as completed.";
+                await loadReminders();
+                await loadCompleted();
+            } catch (error) {
+                console.error(error);
+                message.innerText = "Request failed while completing reminder.";
+            }
+        }
+
         async function deleteReminder(id) {
             const message = document.getElementById("message");
 
@@ -215,4 +241,5 @@
         }
     </script>
 </body>
+
 </html>

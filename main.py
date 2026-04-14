@@ -55,6 +55,22 @@ def completed_reminders():
 
     return rows
 
+@app.put("/complete/{reminder_id}")
+def complete_reminder(reminder_id: int):
+    conn = sqlite3.connect("reminders.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE reminders SET done = 1 WHERE id = ?",
+        (reminder_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "completed"}
+
+
 @app.delete("/delete/{reminder_id}")
 def delete_reminder(reminder_id: int):
     conn = sqlite3.connect("reminders.db")
@@ -66,6 +82,7 @@ def delete_reminder(reminder_id: int):
     conn.close()
 
     return {"status": "deleted"}
+
 
 @app.get("/")
 def read_index():
