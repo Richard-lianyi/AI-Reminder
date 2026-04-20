@@ -9,7 +9,7 @@ while True:
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     cursor.execute(
-        "SELECT id, task FROM reminders WHERE time <= ? AND done = 0",
+        "SELECT id, task FROM reminders WHERE time <= ? AND done = 0 AND notified = 0",
         (now,)
     )
 
@@ -19,7 +19,7 @@ while True:
         print("🔔 REMINDER:", r[1])
 
         cursor.execute(
-            "UPDATE reminders SET done = 1 WHERE id = ?",
+            "UPDATE reminders SET notified = 1 WHERE id = ?",
             (r[0],)
         )
 
